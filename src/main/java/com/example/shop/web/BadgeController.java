@@ -22,12 +22,12 @@ public class BadgeController {
     private final BadgeRepository regionRepository;
 
     @GetMapping("/all")
-    public Page<Badge> getById() {
+    public double getById(int page, int count) {
 
         Sort sort = Sort.by("Id");
         long time = System.nanoTime();
 
-        Pageable pageable = PageRequest.of(0,100,sort);
+        Pageable pageable = PageRequest.of(page,count,sort);
         Page<Badge> list = regionRepository.findAll(pageable);
 
         SessionFactory sessionFactory =null;
@@ -39,7 +39,6 @@ public class BadgeController {
         tx=session.beginTransaction();
             for (Badge badge: list.getContent()) {
                 session.save(badge);
-
             }
             tx.commit();
 
@@ -50,15 +49,15 @@ public class BadgeController {
             if (!sessionFactory.isClosed())
             {
                 System.out.println("Closing SessionFactory");
-                sessionFactory.close();
+                //sessionFactory.close();
             }
         }
         long result = System.nanoTime() - time;
         double second=result/1000000000.0;
         System.out.println((System.nanoTime() - time) + "ns per million");
         System.out.println(second+ "seconds");
-        pageable = PageRequest.of(0,10,sort);
-        return regionRepository.findAll(pageable);
+        //pageable = PageRequest.of(0,10,sort);
+        return second; //regionRepository.findAll(pageable);
     }
 }
 
