@@ -1,12 +1,8 @@
 // import axios from 'axios';
-import * as React from "react";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
-import Modal from "@mui/material/Modal";
-import Button from "@mui/material/Button";
 import "cropperjs/dist/cropper.min.css";
+import * as React from "react";
 import Cropper from "cropperjs";
-import Grid from '@mui/material/Grid';
+import { Button, Modal, Row, Col } from 'antd';
 
 const HomePage: React.FC = () => {
   // React.useEffect(() => {
@@ -20,70 +16,81 @@ const HomePage: React.FC = () => {
   //         .then((res)=> console.log("res", res));
   // });
 
-  const style = {
-    position: "absolute" as "absolute",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-    width: "50%",
-    minWidth: "400px",
-    bgcolor: "background.paper",
-    border: "2px solid #000",
-    boxShadow: 24,
-    p: 4,
-  };
+  const [isModalVisible, setIsModalVisible] = React.useState(false);
   const imgRef = React.useRef<HTMLImageElement>(null);
   const prevRef = React.useRef<HTMLImageElement>(null);
   const [cropperObj, setCropperObj] = React.useState<Cropper>();
+  const [imageView, setImageView] = React.useState<string>("https://www.securityindustry.org/wp-content/uploads/sites/3/2018/05/noimage.png");
 
-  const handleModal = async () => {
-    //console.log("нажали");
-    await setOpen(true);
-    const cropper = new Cropper(imgRef.current as HTMLImageElement, {
-      aspectRatio: 16 / 9,
-      viewMode: 1,
-      preview: prevRef.current as HTMLImageElement,
-    });
-    await setCropperObj(cropper);
-  };
+    //вибір файла
+    const handleChangeFile = async (e: any) => {
+      const file = (e.target.files as FileList)[0];
+      if (file) {
+        const url = URL.createObjectURL(file);
 
-  const [open, setOpen] = React.useState(false);
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
-  const handleCropped = () => {
-      console.log("image", cropperObj?.getCroppedCanvas().toDataURL());
-      handleClose();
-  }
+        await setIsModalVisible(true);
+        console.log("Image ref ", imgRef);
+        let cropper = cropperObj;
+        if (!cropper) {
+          cropper = new Cropper(imgRef.current as HTMLImageElement, {
+            aspectRatio: 1 / 1,
+            viewMode: 1,
+            preview: prevRef.current as HTMLImageElement,
+          });
+        }
+        cropper.replace(url);
+        e.target.value="";
+        setCropperObj(cropper);
+      }
+    };
+
+  const handleOk = () => {
+    const base64 = cropperObj?.getCroppedCanvas().toDataURL() as string;
+    console.log("Cropper data: ", base64);
+    setImageView(base64);
+  setIsModalVisible(false);
+};
+
+const handleCancel = () => {
+  setIsModalVisible(false);
+};
 
   return (
     <>
       <h1>Головна сторінка</h1>
-      <Button variant="contained" onClick={handleModal}>
-        Модалка
-      </Button>
+
+    <label htmlFor="uploadimg" style={{cursor:"pointer"}}>
+      <img src={imageView} alt="" width="250" />
+    </label>
+      <input
+          id="uploadimg"
+          className="d-none"
+          type="file"
+          onChange={handleChangeFile}
+        />
+
+      
+
 
       <Modal
-        open={open}
-        onClose={handleClose}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
-      >
-        <Box sx={style}>
-          <Typography id="modal-modal-title" variant="h6" component="h2">
-            Text in a modal
-          </Typography>
-          <Grid container spacing={2}>
-            <Grid item md={8}>
+          title="Basic Modal"
+          visible={isModalVisible}
+          onOk={handleOk}
+          onCancel={handleCancel}
+        >
+          <p>Some contents...</p>
+          <Row>
+            <Col span={18}>
               <div>
                 <img
+                  src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/Ukrainian_girl_by_Nikolay_Rachkov_%282nd_half_19_c.%2C_Chernigov_museum%29.jpg/435px-Ukrainian_girl_by_Nikolay_Rachkov_%282nd_half_19_c.%2C_Chernigov_museum%29.jpg"
                   width="100%"
                   ref={imgRef}
-                  src="https://vovalohika.tk/images/600_ixdj2v4m.wck.jpeg"
                 />
               </div>
-            </Grid>
-            <Grid item md={4}>
-              <div className="mb-2"
+            </Col>
+            <Col span={6}>
+              <div
                 ref={prevRef}
                 style={{
                   height: "100px",
@@ -93,15 +100,9 @@ const HomePage: React.FC = () => {
               >
                 {" "}
               </div>
-              <div>
-                <Button variant="contained" onClick={handleCropped}>
-                  Отримати фото
-                </Button>
-              </div>
-            </Grid>
-          </Grid>
-        </Box>
-      </Modal>
+            </Col>
+          </Row>
+        </Modal>
     </>
   );
 };
